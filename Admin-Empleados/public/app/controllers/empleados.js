@@ -1,0 +1,83 @@
+app.controller('empleadosController', function ($scope, $http, API_URL) {
+
+
+    $http({
+        method: 'GET',
+        url: API_URL + "empleados"
+    }).then(function (response) {
+        $scope.empleados = response.data.empleados;
+        console.log(response);
+    }, function (error) {
+        console.log(error);
+        alert('Se ha producido un error. Por favor, consulte el registro para más detalles');
+    });
+
+    $scope.toggle = function (modalstate, id) {
+        $scope.modalstate = modalstate;
+        $scope.empleado = null;
+
+        switch (modalstate) {
+            case 'add':
+                $scope.form_title = "Agregar nuevo empleado";
+                break;
+            case 'edit':
+                $scope.form_title = "Detalle del empleado";
+                $scope.id = id;
+                $http.get(API_URL + 'empleados/' + id)
+                    .then(function (response) {
+                        console.log(response);
+                        $scope.empleado = response.data.empleado;
+                    });
+                break;
+            default:
+                break;
+        }
+        
+        console.log(id);
+        $('#myModal').modal('show');
+    }
+
+    $scope.save = function (modalstate, id) {
+        var url = API_URL + "empleados";
+        var method = "POST";
+
+       
+        if (modalstate === 'edit') {
+            url += "/" + id;
+
+            method = "PUT";
+        }
+
+        $http({
+            method: method,
+            url: url,
+            data: $.param($scope.empleado),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        }).then(function (response) {
+            console.log(response);
+            location.reload();
+        }), (function (error) {
+            console.log(error);
+            alert('Se ha producido un error. Por favor, consulte el registro para más detalles');
+        });
+    }
+
+    $scope.confirmDelete = function (id) {
+        var isConfirmDelete = confirm('¿Estás seguro de que quieres elimilar este empleado?');
+        if (isConfirmDelete) {
+
+            $http({
+                method: 'DELETE',
+                url: API_URL + 'empleados/' + id
+            }).then(function (response) {
+                console.log(response);
+                location.reload();
+            }, function (error) {
+                console.log(error);
+                alert('No se puede eliminar');
+            });
+        } else {
+            return false;
+        }
+    }
+});
